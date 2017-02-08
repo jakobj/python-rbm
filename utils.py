@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+import collections
 import itertools
 import numpy as np
 
@@ -18,13 +21,13 @@ def state_array_to_string(s):
     return ''.join(np.array(s, dtype=str))
 
 
-def get_states_as_strings(N):
-    """returns all possible states as strings for N binary units"""
-    return np.array([state_array_to_string(s) for s in all_possible_states(N)])
+def get_states_as_strings(n):
+    """returns all possible states as strings for n binary units"""
+    return np.array([state_array_to_string(s) for s in all_possible_states(n)])
 
 
-def all_possible_states(N):
-    return (np.array(x) for x in itertools.product([0, 1], repeat=N))
+def all_possible_states(n):
+    return itertools.product([0, 1], repeat=n)
 
 
 def sigmoid(x):
@@ -37,21 +40,20 @@ def psigmoid(x):
 
 def joint_distribution(states, steps_warmup, prior=None):
     steps_tot = len(states[steps_warmup:])
-    N = len(states[0])
-    state_counter = {}
+    n = len(states[0])
+    state_counter = collections.defaultdict(int)
     if prior is None:
-        for s in all_possible_states(N):
-            state_counter[tuple(s)] = 0.
+        pass
     elif prior == 'uniform':
-        for s in all_possible_states(N):
-            state_counter[tuple(s)] = 1.
-        steps_tot += 2 ** N
+        for s in all_possible_states(n):
+            state_counter[tuple(s)] = 1
+        steps_tot += 2 ** n
     else:
         raise NotImplementedError('Unknown prior.')
     for s in states[steps_warmup:]:
         state_counter[tuple(s)] += 1
-    hist = np.zeros(2 ** N)
-    for i, s in enumerate(all_possible_states(N)):
+    hist = np.zeros(2 ** n)
+    for i, s in enumerate(all_possible_states(n)):
         hist[i] = state_counter[tuple(s)]
 
     return 1. * hist / np.sum(hist)
